@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { PLAYBOARD_DATA } from '../../../playboard-registry/data';
-import SortableMatrixTable from '../../../components/playboard/SortableMatrixTable';
+import { PLAYBOARD_DATA } from '../../playboard-registry/data';
+import SortableMatrixTable from '../../components/playboard/SortableMatrixTable';
 
 export default function PlayBoardImplementSummary() {
   const data = PLAYBOARD_DATA;

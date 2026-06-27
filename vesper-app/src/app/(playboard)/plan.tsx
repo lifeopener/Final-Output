@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { PLAYBOARD_DATA } from '../../../playboard-registry/data';
-import DiagramModal from '../../../components/playboard/DiagramModal';
-import StatusBadge from '../../../components/playboard/StatusBadge';
+import { PLAYBOARD_DATA } from '../../playboard-registry/data';
+import DiagramModal from '../../components/playboard/DiagramModal';
+import StatusBadge from '../../components/playboard/StatusBadge';
 
 export default function PlayBoardPlan() {
   const data = PLAYBOARD_DATA;

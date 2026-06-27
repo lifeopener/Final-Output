@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { PLAYBOARD_DATA } from '../../../playboard-registry/data';
-import { getScreenCountsByStatus, getWorkItemCountsByStatus } from '../../../playboard-registry/derived';
+import { PLAYBOARD_DATA } from '../../playboard-registry/data';
+import { getScreenCountsByStatus, getWorkItemCountsByStatus } from '../../playboard-registry/derived';
 import { Link } from 'expo-router';
 
 export default function PlayBoardIndex() {

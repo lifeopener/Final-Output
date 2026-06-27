@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { PLAYBOARD_DATA } from '../../../playboard-registry/data';
-import { calculateWaves } from '../../../playboard-registry/derived';
-import StatusBadge from '../../../components/playboard/StatusBadge';
+import { PLAYBOARD_DATA } from '../../playboard-registry/data';
+import { calculateWaves } from '../../playboard-registry/derived';
+import StatusBadge from '../../components/playboard/StatusBadge';
 
 export default function PlayBoardSchedule() {
   const data = PLAYBOARD_DATA;
