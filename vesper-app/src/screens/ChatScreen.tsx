@@ -201,24 +201,65 @@ export default function ChatScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Vesper AI</Text>
       </View>
-      <KeyboardAvoidingView style={styles.keyboardAvoid} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <GiftedChat
-          messages={messages}
-          onSend={onSend}
-          user={{ _id: 1 }}
-          isTyping={isLoading}
-          alwaysShowSend
-          renderUsernameOnMessage
-          placeholder="메시지를 입력하세요..."
-        />
-      </KeyboardAvoidingView>
+      {Platform.OS === 'ios' ? (
+        <KeyboardAvoidingView style={styles.keyboardAvoid} behavior="padding">
+          <GiftedChat
+            messages={messages}
+            onSend={onSend}
+            user={{ _id: 1 }}
+            isTyping={isLoading}
+            alwaysShowSend
+            renderUsernameOnMessage
+            placeholder="메시지를 입력하세요..."
+          />
+        </KeyboardAvoidingView>
+      ) : (
+        <View style={styles.keyboardAvoid}>
+          <GiftedChat
+            messages={messages}
+            onSend={onSend}
+            user={{ _id: 1 }}
+            isTyping={isLoading}
+            alwaysShowSend
+            renderUsernameOnMessage
+            placeholder="메시지를 입력하세요..."
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, height: Platform.OS === 'web' ? '100vh' : '100%', width: '100%', backgroundColor: '#000000' },
-  keyboardAvoid: { flex: 1, width: '100%', height: '100%' },
-  header: { height: 50, justifyContent: 'center', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#333333' },
+  container: {
+    ...Platform.select({
+      web: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      },
+      default: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+      }
+    }),
+    backgroundColor: '#000000',
+  },
+  keyboardAvoid: { 
+    flex: 1, 
+    width: '100%', 
+    height: '100%',
+  },
+  header: { 
+    height: 50, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#333333',
+    backgroundColor: '#000000',
+  },
   headerTitle: { color: '#ffffff', fontSize: 18, fontWeight: 'bold' }
 });
