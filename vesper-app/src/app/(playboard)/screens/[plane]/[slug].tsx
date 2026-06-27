@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 // Import the actual Vesper screens
-import ChatScreen from '../../../../screens/ChatScreen';
+import ChatScreen from '../../../../src/screens/ChatScreen';
 
 export default function DemoScreenRouter() {
   const { plane, slug } = useLocalSearchParams();
