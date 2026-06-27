@@ -5,6 +5,10 @@ import { PLAYBOARD_DATA } from '../../../playboard-registry/data';
 import StatusBadge from '../../../components/playboard/StatusBadge';
 import { Link } from 'expo-router';
 
+export function generateStaticParams() {
+  return PLAYBOARD_DATA.controlAreas.map(a => ({ area: a.area }));
+}
+
 export default function ControlAreaDetail() {
   const { area } = useLocalSearchParams();
   const data = PLAYBOARD_DATA;

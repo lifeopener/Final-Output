@@ -3,6 +3,11 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams, Link } from 'expo-router';
 import { PLAYBOARD_DATA } from '../../../playboard-registry/data';
 import StatusBadge from '../../../components/playboard/StatusBadge';
+import ChatScreen from '../../../screens/ChatScreen';
+
+export function generateStaticParams() {
+  return PLAYBOARD_DATA.flows.map(f => ({ flow: f.id }));
+}
 
 export default function ScenarioWalkthrough() {
   const { flow } = useLocalSearchParams();
@@ -30,9 +35,15 @@ export default function ScenarioWalkthrough() {
           {/* Left: Capture */}
           <View style={styles.leftCol}>
             <Text style={styles.stepHeader}>{flowData.isSequential ? `${idx + 1}단계` : '예외 케이스'}</Text>
-            <View style={styles.capturePlaceholder}>
-              <Text style={{color: '#666'}}>{screen.slug} Capture</Text>
-            </View>
+             {screen.plane === 'end-user' && screen.slug === 'chat' ? (
+              <View style={styles.mockupFrame}>
+                <ChatScreen />
+              </View>
+             ) : (
+              <View style={styles.capturePlaceholder}>
+                <Text style={{color: '#666'}}>{screen.slug} Capture</Text>
+              </View>
+             )}
           </View>
           
           {/* Right: Spec */}
@@ -70,6 +81,14 @@ const styles = StyleSheet.create({
   rightCol: { flex: 1, minWidth: 300, backgroundColor: '#1E1E1E', padding: 16, borderRadius: 8 },
   stepHeader: { color: '#888', fontWeight: 'bold', marginBottom: 8 },
   capturePlaceholder: { height: 400, backgroundColor: '#2D2D2D', justifyContent: 'center', alignItems: 'center', borderRadius: 8 },
+  mockupFrame: {
+    height: 500,
+    backgroundColor: '#0c0c14',
+    borderRadius: 24,
+    borderWidth: 6,
+    borderColor: '#333',
+    overflow: 'hidden',
+  },
   screenTitle: { fontSize: 20, fontWeight: 'bold', color: '#FFF' },
   route: { color: '#666', fontSize: 12, marginBottom: 8 },
   flowNote: { color: '#AAA', marginBottom: 16 },

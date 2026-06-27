@@ -3,6 +3,11 @@ import { View, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 // Import the actual Vesper screens
 import ChatScreen from '../../../../screens/ChatScreen';
+import { PLAYBOARD_DATA } from '../../../../playboard-registry/data';
+
+export function generateStaticParams() {
+  return PLAYBOARD_DATA.screens.map(s => ({ plane: s.plane, slug: s.slug }));
+}
 
 export default function DemoScreenRouter() {
   const { plane, slug } = useLocalSearchParams();

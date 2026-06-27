@@ -3,6 +3,11 @@ import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { useLocalSearchParams, Link } from 'expo-router';
 import { PLAYBOARD_DATA } from '../../../../playboard-registry/data';
 import StatusBadge from '../../../../components/playboard/StatusBadge';
+import ChatScreen from '../../../../screens/ChatScreen';
+
+export function generateStaticParams() {
+  return PLAYBOARD_DATA.screens.map(s => ({ plane: s.plane, slug: s.slug }));
+}
 
 export default function SpecDetail() {
   const { plane, slug } = useLocalSearchParams();
@@ -35,9 +40,15 @@ export default function SpecDetail() {
             <Text style={styles.kvText}><Text style={styles.kText}>요구사항 근거: </Text>{screen.requirementRefs.join(', ')}</Text>
           </View>
           <View style={styles.col}>
-            <View style={styles.capturePlaceholder}>
-              <Text style={{color: '#666'}}>캡처 이미지 영역 (captures/{screen.plane}/{screen.slug}.png)</Text>
-            </View>
+            {screen.plane === 'end-user' && screen.slug === 'chat' ? (
+              <View style={styles.mockupFrame}>
+                <ChatScreen />
+              </View>
+            ) : (
+              <View style={styles.capturePlaceholder}>
+                <Text style={{color: '#666'}}>캡처 이미지 영역 (captures/{screen.plane}/{screen.slug}.png)</Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -69,7 +80,7 @@ export default function SpecDetail() {
           </View>
         </View>
 
-        <Text style={styles.subTitle}>제어 영역 관심사</Text>
+        <Text style={styles.subTitle}>제어 영역 연동 사항</Text>
         <View style={styles.engGrid}>
           {Object.entries(screen.engineering.controlAreaNotes).map(([area, note]) => (
             <View key={area} style={styles.areaCard}>
@@ -80,13 +91,13 @@ export default function SpecDetail() {
         </View>
       </View>
 
-      {/* 연결된 작업 */}
+      {/* 관련 작업 단위 (Slices) */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>연결된 작업</Text>
+        <Text style={styles.sectionTitle}>관련 작업 단위 (Slices)</Text>
         {relatedWorkItems.map(w => (
           <View key={w.id} style={styles.workCard}>
-            <Text style={styles.kText}>{w.id}</Text>
             <StatusBadge status={w.status} />
+            <Text style={styles.kText}>{w.id}</Text>
             <Text style={styles.kvText} numberOfLines={1}>{w.title}</Text>
           </View>
         ))}
@@ -115,4 +126,12 @@ const styles = StyleSheet.create({
   areaCard: { flex: 1, minWidth: 200, backgroundColor: '#2D2D2D', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#444' },
   areaLink: { color: '#2196F3', fontWeight: 'bold', marginBottom: 8 },
   workCard: { flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: '#1E1E1E', padding: 12, borderRadius: 8, marginBottom: 8 },
+  mockupFrame: {
+    height: 400,
+    backgroundColor: '#0c0c14',
+    borderRadius: 16,
+    borderWidth: 4,
+    borderColor: '#333',
+    overflow: 'hidden',
+  },
 });
