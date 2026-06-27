@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  SafeAreaView, StyleSheet, Platform, View, Text, TextInput,
-  TouchableOpacity, ScrollView, ActivityIndicator, Animated, Dimensions,
+  StyleSheet, Platform, View, Text, TextInput,
+  Pressable, ScrollView, Animated,
 } from 'react-native';
 
 const generateUUID = () =>
@@ -41,12 +41,7 @@ const TOOLS = [{
   }
 }];
 
-const INITIAL_MESSAGES: ChatMessage[] = [{
-  id: '1',
-  text: '안녕하세요! 당신의 투자 여정을 함께할 평생의 친구, Vesper입니다. 🌟\n\n오늘 하루는 어떠셨나요? 실시간 이슈나 종목 뉴스도 검색해드릴 수 있어요.',
-  sender: 'bot',
-  createdAt: new Date(),
-}];
+const WELCOME_TEXT = '안녕하세요! 당신의 투자 여정을 함께할 평생의 친구, Vesper입니다. 🌟\n\n오늘 하루는 어떠셨나요? 실시간 이슈나 종목 뉴스도 검색해드릴 수 있어요.';
 
 /* ── Animated Message Bubble ── */
 function MessageBubble({ msg, index }: { msg: ChatMessage; index: number }) {
@@ -120,11 +115,17 @@ function TypingIndicator() {
 
 /* ── Main ChatScreen ── */
 export default function ChatScreen() {
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const internalRef = useRef<any[]>([{ role: 'system', content: SYSTEM_PROMPT }]);
+
+  useEffect(() => {
+    setMessages([{
+      id: '1', text: WELCOME_TEXT, sender: 'bot', createdAt: new Date(),
+    }]);
+  }, []);
 
   useEffect(() => {
     setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 150);
@@ -266,17 +267,22 @@ export default function ChatScreen() {
             placeholderTextColor="rgba(255,255,255,0.35)"
             onSubmitEditing={handleSend}
             editable={!isLoading}
-            multiline
+            returnKeyType="send"
+            blurOnSubmit={false}
+            {...(Platform.OS === 'web' ? { onKeyPress: (e: any) => { if (e.nativeEvent.key === 'Enter' && !e.nativeEvent.shiftKey) { e.preventDefault(); handleSend(); } } } : {})}
           />
         </View>
-        <TouchableOpacity
-          style={[styles.sendBtn, (!inputText.trim() || isLoading) && styles.sendBtnDisabled]}
+        <Pressable
+          style={({ pressed }) => [
+            styles.sendBtn,
+            (!inputText.trim() || isLoading) && styles.sendBtnDisabled,
+            pressed && { opacity: 0.7 },
+          ]}
           onPress={handleSend}
           disabled={!inputText.trim() || isLoading}
-          activeOpacity={0.7}
         >
           <Text style={styles.sendIcon}>↑</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   );
@@ -302,6 +308,7 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
+    flexShrink: 0,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 14,
     backgroundColor: 'rgba(12,12,20,0.95)',
@@ -324,7 +331,7 @@ const styles = StyleSheet.create({
   statusBusy: { backgroundColor: '#FFD93D' },
 
   // Chat Area
-  chatArea: { flex: 1 },
+  chatArea: { flex: 1, overflow: Platform.OS === 'web' ? 'hidden' as any : undefined },
   chatContent: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 16 },
 
   // Date Chip
@@ -370,6 +377,7 @@ const styles = StyleSheet.create({
 
   // Input Bar
   inputBar: {
+    flexShrink: 0,
     flexDirection: 'row', alignItems: 'flex-end',
     paddingHorizontal: 12, paddingVertical: 10, gap: 8,
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)',
