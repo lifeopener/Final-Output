@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   SafeAreaView, StyleSheet, Platform, View, Text, TextInput,
-  TouchableOpacity, ScrollView, ActivityIndicator
+  TouchableOpacity, ScrollView, ActivityIndicator, Animated, Dimensions,
 } from 'react-native';
 
 const generateUUID = () =>
@@ -17,6 +17,7 @@ interface ChatMessage {
   createdAt: Date;
 }
 
+// NFR-002 Compliance
 const applyRegulatoryMasking = (text: string) => {
   const patterns = [
     /무조건\s*매수/g, /수익률\s*보장/g, /원금\s*보장/g,
@@ -42,11 +43,82 @@ const TOOLS = [{
 
 const INITIAL_MESSAGES: ChatMessage[] = [{
   id: '1',
-  text: '안녕하세요! 당신의 투자 여정을 함께할 평생의 친구, Vesper입니다. 🌟\n\n오늘 하루는 어떠셨나요? 실시간 이슈나 종목 뉴스도 검색해드릴 수 있습니다.',
+  text: '안녕하세요! 당신의 투자 여정을 함께할 평생의 친구, Vesper입니다. 🌟\n\n오늘 하루는 어떠셨나요? 실시간 이슈나 종목 뉴스도 검색해드릴 수 있어요.',
   sender: 'bot',
   createdAt: new Date(),
 }];
 
+/* ── Animated Message Bubble ── */
+function MessageBubble({ msg, index }: { msg: ChatMessage; index: number }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 300, delay: index * 50, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 300, delay: index * 50, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const isUser = msg.sender === 'user';
+
+  return (
+    <Animated.View style={[
+      styles.msgRow,
+      isUser ? styles.msgRowUser : styles.msgRowBot,
+      { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+    ]}>
+      {!isUser && (
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>V</Text>
+        </View>
+      )}
+      <View style={[styles.bubble, isUser ? styles.userBubble : styles.botBubble]}>
+        {!isUser && <Text style={styles.botLabel}>Vesper</Text>}
+        <Text style={isUser ? styles.userText : styles.botText}>{msg.text}</Text>
+        <Text style={[styles.time, isUser && styles.timeUser]}>
+          {msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+/* ── Typing Indicator ── */
+function TypingIndicator() {
+  const dot1 = useRef(new Animated.Value(0.3)).current;
+  const dot2 = useRef(new Animated.Value(0.3)).current;
+  const dot3 = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    const animate = (dot: Animated.Value, delay: number) => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(dot, { toValue: 1, duration: 400, delay, useNativeDriver: true }),
+          Animated.timing(dot, { toValue: 0.3, duration: 400, useNativeDriver: true }),
+        ])
+      ).start();
+    };
+    animate(dot1, 0);
+    animate(dot2, 200);
+    animate(dot3, 400);
+  }, []);
+
+  return (
+    <View style={styles.msgRow}>
+      <View style={styles.avatar}><Text style={styles.avatarText}>V</Text></View>
+      <View style={[styles.bubble, styles.botBubble, styles.typingBubble]}>
+        <View style={styles.dotRow}>
+          <Animated.View style={[styles.dot, { opacity: dot1 }]} />
+          <Animated.View style={[styles.dot, { opacity: dot2 }]} />
+          <Animated.View style={[styles.dot, { opacity: dot3 }]} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/* ── Main ChatScreen ── */
 export default function ChatScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState('');
@@ -55,7 +127,7 @@ export default function ChatScreen() {
   const internalRef = useRef<any[]>([{ role: 'system', content: SYSTEM_PROMPT }]);
 
   useEffect(() => {
-    setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 100);
+    setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 150);
   }, [messages]);
 
   const tavilySearch = async (query: string) => {
@@ -113,7 +185,7 @@ export default function ChatScreen() {
     }
 
     if (toolCallName === 'search_web') {
-      setMessages(prev => prev.map(m => m.id === botId ? { ...m, text: "🔍 웹에서 실시간 정보를 검색 중입니다..." } : m));
+      setMessages(prev => prev.map(m => m.id === botId ? { ...m, text: "🔍 웹에서 실시간 정보를 검색하고 있어요..." } : m));
       let query = "";
       try { query = JSON.parse(toolCallArgs).query; } catch {}
       const searchResult = await tavilySearch(query);
@@ -122,7 +194,7 @@ export default function ChatScreen() {
         tool_calls: [{ id: toolCallId, type: "function", function: { name: toolCallName, arguments: toolCallArgs } }]
       });
       internalRef.current.push({ role: "tool", tool_call_id: toolCallId, name: toolCallName, content: searchResult });
-      setMessages(prev => prev.map(m => m.id === botId ? { ...m, text: "📝 답변을 정리하고 있습니다..." } : m));
+      setMessages(prev => prev.map(m => m.id === botId ? { ...m, text: "📝 답변을 정리하고 있어요..." } : m));
       await processOpenAI(internalRef.current, botId);
     } else {
       internalRef.current.push({ role: 'assistant', content: fullContent });
@@ -156,84 +228,170 @@ export default function ChatScreen() {
 
   return (
     <View style={styles.root}>
+      {/* ── Header ── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Vesper AI</Text>
+        <View style={styles.headerInner}>
+          <View style={styles.headerAvatar}>
+            <Text style={styles.headerAvatarText}>V</Text>
+          </View>
+          <View>
+            <Text style={styles.headerTitle}>Vesper AI</Text>
+            <Text style={styles.headerSub}>{isLoading ? '입력 중...' : '온라인'}</Text>
+          </View>
+        </View>
+        <View style={styles.headerDot}>
+          <View style={[styles.statusDot, isLoading ? styles.statusBusy : styles.statusOnline]} />
+        </View>
       </View>
+
+      {/* ── Messages ── */}
       <ScrollView ref={scrollRef} style={styles.chatArea} contentContainerStyle={styles.chatContent}>
-        {messages.map(msg => (
-          <View key={msg.id} style={[styles.bubble, msg.sender === 'user' ? styles.userBubble : styles.botBubble]}>
-            {msg.sender === 'bot' && <Text style={styles.botName}>Vesper</Text>}
-            <Text style={msg.sender === 'user' ? styles.userText : styles.botText}>{msg.text}</Text>
-            <Text style={styles.timestamp}>
-              {msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </Text>
-          </View>
+        <View style={styles.dateChip}>
+          <Text style={styles.dateChipText}>오늘</Text>
+        </View>
+        {messages.map((msg, i) => (
+          <MessageBubble key={msg.id} msg={msg} index={i} />
         ))}
-        {isLoading && (
-          <View style={styles.typingRow}>
-            <ActivityIndicator size="small" color="#7C3AED" />
-            <Text style={styles.typingText}>Vesper가 입력 중...</Text>
-          </View>
-        )}
+        {isLoading && <TypingIndicator />}
       </ScrollView>
+
+      {/* ── Input Bar ── */}
       <View style={styles.inputBar}>
-        <TextInput
-          style={styles.input}
-          value={inputText}
-          onChangeText={setInputText}
-          placeholder="메시지를 입력하세요..."
-          placeholderTextColor="#888"
-          onSubmitEditing={handleSend}
-          editable={!isLoading}
-        />
-        <TouchableOpacity style={[styles.sendBtn, (!inputText.trim() || isLoading) && styles.sendBtnDisabled]} onPress={handleSend} disabled={!inputText.trim() || isLoading}>
-          <Text style={styles.sendBtnText}>전송</Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.input}
+            value={inputText}
+            onChangeText={setInputText}
+            placeholder="메시지를 입력하세요..."
+            placeholderTextColor="rgba(255,255,255,0.35)"
+            onSubmitEditing={handleSend}
+            editable={!isLoading}
+            multiline
+          />
+        </View>
+        <TouchableOpacity
+          style={[styles.sendBtn, (!inputText.trim() || isLoading) && styles.sendBtnDisabled]}
+          onPress={handleSend}
+          disabled={!inputText.trim() || isLoading}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.sendIcon}>↑</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
+/* ── Styles ── */
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#0c0c14',
     display: 'flex',
     flexDirection: 'column',
     minHeight: Platform.OS === 'web' ? '100vh' as any : undefined,
+    maxWidth: 480,
+    width: '100%',
+    alignSelf: 'center',
+    ...(Platform.OS === 'web' ? {
+      borderLeftWidth: 1,
+      borderRightWidth: 1,
+      borderColor: 'rgba(255,255,255,0.06)',
+    } : {}),
   },
+
+  // Header
   header: {
-    height: 56, justifyContent: 'center', alignItems: 'center',
-    borderBottomWidth: 1, borderBottomColor: '#1e1e2e',
-    backgroundColor: '#0f0f1a',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 14,
+    backgroundColor: 'rgba(12,12,20,0.95)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
+    ...(Platform.OS === 'web' ? { position: 'sticky' as any, top: 0, zIndex: 100, backdropFilter: 'blur(20px)' as any } : {}),
   },
-  headerTitle: { color: '#e0e0ff', fontSize: 18, fontWeight: '700', letterSpacing: 1 },
+  headerInner: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerAvatar: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#7C3AED',
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 8,
+  },
+  headerAvatarText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  headerTitle: { color: '#f0f0ff', fontSize: 17, fontWeight: '700' },
+  headerSub: { color: '#50E3C2', fontSize: 12, fontWeight: '500', marginTop: 1 },
+  headerDot: { paddingRight: 4 },
+  statusDot: { width: 10, height: 10, borderRadius: 5 },
+  statusOnline: { backgroundColor: '#50E3C2' },
+  statusBusy: { backgroundColor: '#FFD93D' },
+
+  // Chat Area
   chatArea: { flex: 1 },
-  chatContent: { paddingHorizontal: 16, paddingVertical: 12 },
-  bubble: { maxWidth: '80%', marginVertical: 6, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10 },
-  userBubble: { alignSelf: 'flex-end', backgroundColor: '#7C3AED', borderBottomRightRadius: 4 },
-  botBubble: { alignSelf: 'flex-start', backgroundColor: '#1a1a2e', borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#2a2a3e' },
-  userText: { color: '#ffffff', fontSize: 15, lineHeight: 22 },
-  botText: { color: '#d0d0e8', fontSize: 15, lineHeight: 22 },
-  botName: { color: '#7C3AED', fontSize: 12, fontWeight: '600', marginBottom: 4 },
-  timestamp: { color: '#666', fontSize: 10, marginTop: 4, alignSelf: 'flex-end' },
-  typingRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 4 },
-  typingText: { color: '#888', fontSize: 13, marginLeft: 8 },
+  chatContent: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 16 },
+
+  // Date Chip
+  dateChip: {
+    alignSelf: 'center', paddingHorizontal: 14, paddingVertical: 5,
+    backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 12, marginBottom: 12,
+  },
+  dateChipText: { color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: '500' },
+
+  // Message Row
+  msgRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 8 },
+  msgRowUser: { justifyContent: 'flex-end' },
+  msgRowBot: { justifyContent: 'flex-start' },
+
+  // Avatar
+  avatar: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#7C3AED', justifyContent: 'center', alignItems: 'center',
+    marginRight: 8, marginBottom: 2,
+  },
+  avatarText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+
+  // Bubbles
+  bubble: { maxWidth: '75%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
+  userBubble: {
+    backgroundColor: '#7C3AED', borderBottomRightRadius: 6,
+    shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 6,
+  },
+  botBubble: {
+    backgroundColor: '#1a1a2e', borderBottomLeftRadius: 6,
+    borderWidth: 1, borderColor: 'rgba(124,58,237,0.15)',
+  },
+  userText: { color: '#fff', fontSize: 15, lineHeight: 22 },
+  botText: { color: '#d8d8f0', fontSize: 15, lineHeight: 22 },
+  botLabel: { color: '#7C3AED', fontSize: 11, fontWeight: '700', marginBottom: 3, letterSpacing: 0.5 },
+  time: { color: 'rgba(255,255,255,0.35)', fontSize: 10, marginTop: 4, alignSelf: 'flex-end' },
+  timeUser: { color: 'rgba(255,255,255,0.55)' },
+
+  // Typing
+  typingBubble: { paddingVertical: 14, paddingHorizontal: 18 },
+  dotRow: { flexDirection: 'row', gap: 5 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#7C3AED' },
+
+  // Input Bar
   inputBar: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 12, paddingVertical: 10,
-    borderTopWidth: 1, borderTopColor: '#1e1e2e',
-    backgroundColor: '#0f0f1a',
+    flexDirection: 'row', alignItems: 'flex-end',
+    paddingHorizontal: 12, paddingVertical: 10, gap: 8,
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(12,12,20,0.95)',
+    ...(Platform.OS === 'web' ? { backdropFilter: 'blur(20px)' as any } : {}),
+  },
+  inputWrapper: {
+    flex: 1, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 24,
+    paddingHorizontal: 16, paddingVertical: Platform.OS === 'web' ? 10 : 8,
+    borderWidth: 1, borderColor: 'rgba(124,58,237,0.15)',
+    maxHeight: 120,
   },
   input: {
-    flex: 1, height: 44, backgroundColor: '#1a1a2e', borderRadius: 22,
-    paddingHorizontal: 16, color: '#e0e0ff', fontSize: 15,
-    borderWidth: 1, borderColor: '#2a2a3e',
+    color: '#e8e8ff', fontSize: 15, lineHeight: 20,
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' as any } : {}),
   },
   sendBtn: {
-    marginLeft: 8, backgroundColor: '#7C3AED', borderRadius: 22,
-    paddingHorizontal: 20, height: 44, justifyContent: 'center', alignItems: 'center',
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: '#7C3AED',
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 8,
   },
-  sendBtnDisabled: { opacity: 0.4 },
-  sendBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  sendBtnDisabled: { backgroundColor: 'rgba(124,58,237,0.3)', shadowOpacity: 0 },
+  sendIcon: { color: '#fff', fontSize: 20, fontWeight: '800' },
 });
