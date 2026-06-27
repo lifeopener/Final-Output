@@ -84,16 +84,16 @@ export const PLAYBOARD_DATA: PlayBoardSoT = {
       id: 'task-3',
       title: 'LLM 스트리밍 연동 (Edge Function)',
       phase: 'Phase 3: Logic',
-      status: '리뷰대기', // '리뷰대기' means partial / PR ready
+      status: '완료', // 프론트엔드 직접 통신으로 대체 완료
       dependsOn: ['task-2'],
       screens: ['end-user/chat'],
-      doc: 'supabase/functions/chat/index.ts',
+      doc: 'ChatScreen.tsx 내 스트리밍 파서 탑재',
     },
     {
       id: 'task-4',
       title: '웹 검색 연동 (Tavily)',
       phase: 'Phase 3: Logic',
-      status: '미착수',
+      status: '완료',
       dependsOn: ['task-3'],
       screens: ['end-user/chat'],
       doc: 'Tavily API 연결',
@@ -102,7 +102,7 @@ export const PLAYBOARD_DATA: PlayBoardSoT = {
       id: 'task-5',
       title: '마스킹 규칙 (Compliance) 적용',
       phase: 'Phase 4: Launch',
-      status: '미착수',
+      status: '완료',
       dependsOn: ['task-3'],
       screens: ['end-user/chat'],
       doc: '정규식 필터링 탑재',
@@ -137,7 +137,7 @@ export const PLAYBOARD_DATA: PlayBoardSoT = {
       decisions: [{ name: '위험 키워드', value: '무조건 매수, 수익률 보장 등' }],
       standards: [],
       workItems: ['task-5'],
-      gaps: ['아직 마스킹 정규식이 Edge Function에 완벽히 적용되지 않음'],
+      gaps: [],
     },
     {
       area: 'cost',
