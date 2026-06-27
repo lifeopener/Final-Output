@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams, Link } from 'expo-router';
-import { PLAYBOARD_DATA } from '../../../../playboard-registry/data';
+import { PLAYBOARD_DATA } from '../../../playboard-registry/data';
 
 export default function UXFlowOverview() {
   const { flow } = useLocalSearchParams();
