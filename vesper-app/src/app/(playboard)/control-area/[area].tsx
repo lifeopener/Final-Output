@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { PLAYBOARD_DATA } from '../../../../playboard-registry/data';
-import StatusBadge from '../../../../components/playboard/StatusBadge';
+import { PLAYBOARD_DATA } from '../../../playboard-registry/data';
+import StatusBadge from '../../../components/playboard/StatusBadge';
 import { Link } from 'expo-router';
 
 export default function ControlAreaDetail() {
