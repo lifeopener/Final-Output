@@ -156,10 +156,14 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    height: Platform.OS === 'web' ? '100vh' : '100%',
+    width: '100%',
     backgroundColor: '#000000',
   },
   keyboardAvoid: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
   header: {
     height: 50,
