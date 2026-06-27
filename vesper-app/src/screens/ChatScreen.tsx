@@ -50,8 +50,8 @@ function MessageBubble({ msg, index }: { msg: ChatMessage; index: number }) {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 300, delay: index * 50, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 300, delay: index * 50, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 300, delay: index * 50, useNativeDriver: false }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 300, delay: index * 50, useNativeDriver: false }),
     ]).start();
   }, []);
 
@@ -115,17 +115,13 @@ function TypingIndicator() {
 
 /* ── Main ChatScreen ── */
 export default function ChatScreen() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([{
+    id: '1', text: WELCOME_TEXT, sender: 'bot', createdAt: new Date()
+  }]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const internalRef = useRef<any[]>([{ role: 'system', content: SYSTEM_PROMPT }]);
-
-  useEffect(() => {
-    setMessages([{
-      id: '1', text: WELCOME_TEXT, sender: 'bot', createdAt: new Date(),
-    }]);
-  }, []);
 
   useEffect(() => {
     setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 150);
