@@ -40,21 +40,19 @@ const TOOLS = [{
   }
 }];
 
+const INITIAL_MESSAGES: ChatMessage[] = [{
+  id: '1',
+  text: '안녕하세요! 당신의 투자 여정을 함께할 평생의 친구, Vesper입니다. 🌟\n\n오늘 하루는 어떠셨나요? 실시간 이슈나 종목 뉴스도 검색해드릴 수 있습니다.',
+  sender: 'bot',
+  createdAt: new Date(),
+}];
+
 export default function ChatScreen() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const internalRef = useRef<any[]>([{ role: 'system', content: SYSTEM_PROMPT }]);
-
-  useEffect(() => {
-    setMessages([{
-      id: '1',
-      text: '안녕하세요! 당신의 투자 여정을 함께할 평생의 친구, Vesper입니다. 🌟\n\n오늘 하루는 어떠셨나요? 실시간 이슈나 종목 뉴스도 검색해드릴 수 있습니다.',
-      sender: 'bot',
-      createdAt: new Date(),
-    }]);
-  }, []);
 
   useEffect(() => {
     setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 100);
@@ -198,13 +196,11 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   root: {
-    ...Platform.select({
-      web: { position: 'absolute' as any, top: 0, left: 0, right: 0, bottom: 0 },
-      default: { flex: 1 },
-    }),
+    flex: 1,
     backgroundColor: '#0a0a0f',
     display: 'flex',
     flexDirection: 'column',
+    minHeight: Platform.OS === 'web' ? '100vh' as any : undefined,
   },
   header: {
     height: 56, justifyContent: 'center', alignItems: 'center',
